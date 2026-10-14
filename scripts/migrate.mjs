@@ -184,6 +184,16 @@ let pendientes = [];   // { table, column, target, id, path } ya commiteadas, si
 
 function commitLocal(target, prefix, n) {
   sh(`git add --sparse -A ${prefix}`);
+  // CAMBIO (2026-10-14): si TODAS las portadas de la tanda ya estaban en el
+  // repo con el mismo contenido (fila que el pipeline volvió a apuntar a la
+  // URL original), no hay nada que commitear y "git commit" fallaba con
+  // código 1 tumbando la ejecución. Ahora se salta el commit; las filas se
+  // siguen apuntando a GitHub en el flush porque el archivo ya existe allí.
+  try {
+    execSync("git diff --cached --quiet");
+    console.log(`${target}: ${n} ya estaban idénticas en el repo, sin commit`);
+    return;
+  } catch { /* hay cambios preparados: se commitea */ }
   sh(`git -c user.name="bookvault-bot" -c user.email="bot@users.noreply.github.com" commit -q -m "${target}: +${n}"`);
 }
 
