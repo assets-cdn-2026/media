@@ -68,8 +68,9 @@ jobs:
         continue-on-error: true
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
           for i in 1 2 3; do
-            curl -s -m 70 "https://bookvault-dusky.vercel.app/api/telegram/clean-orphan-covers?secret=${CRON_SECRET}&force=1&min_horas=48" || true
+            curl -s -m 70 "${APP_URL}/api/telegram/clean-orphan-covers?secret=${CRON_SECRET}&force=1&min_horas=48" || true
             echo
           done

@@ -1,6 +1,6 @@
 // scripts/migrate.mjs
 //
-// Migra TODAS las imágenes de BookVault a este repo (servidas por
+// Migra todas las imágenes a este repo (servidas por
 // raw.githubusercontent.com, que va por Fastly y no por Cloudflare -> sin bloqueo
 // en partidos de LaLiga y sin depender de webs externas).
 //
@@ -30,8 +30,12 @@ import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { createHash } from "node:crypto";
 
-const REPO_HOST = "raw.githubusercontent.com/paulamago-dot/bookvault-covers";
+const REPO_HOST = "raw.githubusercontent.com/assets-cdn-2026/media";
 const RAW_BASE = `https://${REPO_HOST}/main`;
+// Dirección anterior del repo (antes del traslado del 16/10/2026). Las filas que
+// aún apuntan ahí YA están en este repo (GitHub redirige): no se vuelven a migrar.
+// Se cambian a la dirección nueva con SQL, por lotes.
+const OLD_REPO_HOST = "raw.githubusercontent.com/paulamago-dot/bookvault-covers";
 const WIDTH = 350;
 const QUALITY = 75;
 const PAGE = 200;               // filas por consulta = archivos por commit
@@ -194,7 +198,7 @@ function commitLocal(target, prefix, n) {
     console.log(`${target}: ${n} ya estaban idénticas en el repo, sin commit`);
     return;
   } catch { /* hay cambios preparados: se commitea */ }
-  sh(`git -c user.name="bookvault-bot" -c user.email="bot@users.noreply.github.com" commit -q -m "${target}: +${n}"`);
+  sh(`git -c user.name="assets-bot" -c user.email="bot@users.noreply.github.com" commit -q -m "${target}: +${n}"`);
 }
 
 async function pushConReintentos() {
@@ -264,6 +268,7 @@ async function migrateTarget(target) {
       .select(`id, ${column}`)
       .ilike(column, "http%")
       .not(column, "ilike", `%${REPO_HOST}%`)
+      .not(column, "ilike", `%${OLD_REPO_HOST}%`)
       .order("id", { ascending: true })
       .limit(pageSize);
     if (numerico) {
