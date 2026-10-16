@@ -32,10 +32,6 @@ import { createHash } from "node:crypto";
 
 const REPO_HOST = "raw.githubusercontent.com/assets-cdn-2026/media";
 const RAW_BASE = `https://${REPO_HOST}/main`;
-// Dirección anterior del repo (antes del traslado del 16/10/2026). Las filas que
-// aún apuntan ahí YA están en este repo (GitHub redirige): no se vuelven a migrar.
-// Se cambian a la dirección nueva con SQL, por lotes.
-const OLD_REPO_HOST = "raw.githubusercontent.com/paulamago-dot/bookvault-covers";
 const WIDTH = 350;
 const QUALITY = 75;
 const PAGE = 200;               // filas por consulta = archivos por commit
@@ -268,7 +264,6 @@ async function migrateTarget(target) {
       .select(`id, ${column}`)
       .ilike(column, "http%")
       .not(column, "ilike", `%${REPO_HOST}%`)
-      .not(column, "ilike", `%${OLD_REPO_HOST}%`)
       .order("id", { ascending: true })
       .limit(pageSize);
     if (numerico) {
